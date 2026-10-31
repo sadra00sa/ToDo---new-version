@@ -2,7 +2,7 @@
 
 A clean, category-based to-do list web app built with **HTML, CSS and pure JavaScript**, with no frameworks or libraries.
 
-**[Live Demo](https://sadra00sa.github.io/Tick-Task/)**
+**[Live Demo](https://sadra00sa.github.io/ToDo---new-version/)**
 
 <!-- Add a screenshot: save it as assets/screenshot.png and keep the line below -->
 ![Tick Task screenshot](assets/screenshot.png)
