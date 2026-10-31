@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Tick Task</title>
+    <link rel="icon" type="image/png" href="assets/icon/fav/ic-baseline-done-outline-iconbase.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=DM+Sans:opsz,wght@9..40,400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style/style.css" />
+
+    <script>
+      try {
+        var s = JSON.parse(localStorage.getItem("tickTask.settings") || "{}");
+        var t = s.theme || "system";
+        var dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      } catch (e) {}
+    </script>
+    <script src="./assets/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app">
+      <!--Sidebar -->
+      <aside class="sidebar" id="sidebar" aria-label="Account and filters">
+        <div class="brand">
+          <span class="brand__mark" data-icon="check"></span>
+          <span>Tick Task</span>
+          <button type="button" class="icon-btn sidebar__close" id="sidebar-close" aria-label="Close menu" data-icon="close"></button>
+        </div>
+
+        <div class="profile" id="account">
+          <span class="avatar" data-avatar></span>
+          <span class="profile__name" id="user-name">User Name</span>
+          <button type="button" class="icon-btn" id="setting" aria-label="Open settings" data-icon="gear"></button>
+        </div>
+
+        <button type="button" class="nav-item" id="calendar-btn">
+          <span data-icon="calendar"></span>
+          Calendar
+        </button>
+
+        <div class="search">
+          <span data-icon="search"></span>
+          <input type="search" class="input" id="search" name="search" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off" />
+        </div>
+
+        <section class="sidebar__filters" aria-labelledby="filters-title">
+          <div class="sidebar__section-head">
+            <h2 id="filters-title" class="sidebar__title">Filters</h2>
+            <button type="button" class="link-btn" id="reset-filter-btn">Reset</button>
+          </div>
+          <div id="active-filters" class="badges" hidden></div>
+          <div class="filter-group" id="filter-status" role="group" aria-label="Filter by status"></div>
+          <div class="filter-group" id="filter-category" role="group" aria-label="Filter by category"></div>
+        </section>
+
+        <button type="button" class="btn btn--primary sidebar__apply" id="sidebar-apply">Show tasks</button>
+      </aside>
+      <div class="scrim" id="scrim" aria-hidden="true"></div>
+
+      <!-- Main -->
+      <main class="main">
+        <header class="topbar">
+          <button type="button" class="icon-btn menu-btn" id="menu-btn" aria-label="Open filters" aria-controls="sidebar" aria-expanded="false" data-icon="menu"></button>
+          <div class="topbar__text">
+            <h1 class="page-title">To Do List</h1>
+            <p class="summary" id="summary"></p>
+          </div>
+          <button type="button" class="btn btn--primary" id="add_task">
+            <span data-icon="plus"></span>
+            New task
+          </button>
+        </header>
+
+        <section class="panel week" id="dateBox" aria-label="Week">
+          <div class="week__head">
+            <h2 class="week__title" id="week-title"></h2>
+            <button type="button" class="btn btn--soft btn--sm" id="week-today">Today</button>
+            <button type="button" class="icon-btn" id="pre_week" aria-label="Previous week" data-icon="chevL"></button>
+            <button type="button" class="icon-btn" id="next_week" aria-label="Next week" data-icon="chevR"></button>
+          </div>
+          <div class="week__days" id="week-days"></div>
+        </section>
+
+        <div class="chips" id="category" role="group" aria-label="Categories"></div>
+
+        <div class="filters-bar">
+          <div class="segmented" id="progress" role="group" aria-label="Status"></div>
+          <button type="button" class="important-btn" id="prog_imp" aria-pressed="false">
+            <span data-icon="star"></span>
+            Important
+          </button>
+        </div>
+
+        <section class="panel list" id="listContainer" aria-label="Tasks">
+          <p class="sr-only" id="list-status" role="status" aria-live="polite"></p>
+          <div class="empty" id="preentered" hidden>
+            <span class="empty__icon" data-icon="check"></span>
+            <h2 class="empty__title" id="empty-title"></h2>
+            <p class="empty__text" id="empty-text"></p>
+            <button type="button" class="btn btn--primary" id="empty-action"></button>
+          </div>
+          <ul class="holeList" id="holeList"></ul>
+        </section>
+      </main>
+    </div>
+
+    <!-- Add / edit task -->
+    <dialog class="dialog" id="add-modal" aria-labelledby="add-modal-title">
+      <form class="dialog__panel" id="task-form" novalidate>
+        <header class="dialog__head">
+          <h2 id="add-modal-title">New task</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close" data-icon="close"></button>
+        </header>
+        <div class="dialog__body">
+          <div class="field">
+            <label for="title">Task title</label>
+            <input class="input" type="text" name="title" id="title" maxlength="120" autocomplete="off" required aria-describedby="title-error" />
+            <p class="field__error" id="title-error" role="alert" hidden>Enter a title to save this task.</p>
+          </div>
+          <div class="field">
+            <label for="description">Description</label>
+            <textarea class="input" name="description" id="description" rows="3" maxlength="400"></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="category-selector">Category</label>
+              <select class="input" name="category-selector" id="category-selector">
+                <option value="home">Home</option>
+                <option value="health">Health</option>
+                <option value="personal">Personal</option>
+                <option value="work">Work</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="status-selector">Status</label>
+              <select class="input" name="status-selector" id="status-selector">
+                <option value="to-do">To do</option>
+                <option value="done">Done</option>
+                <option value="overdue">Overdue</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="task-input-date">Date</label>
+              <input class="input" type="date" name="task-input-date" id="task-input-date" />
+            </div>
+            <div class="field">
+              <label for="task-input-time">Time</label>
+              <input class="input" type="time" name="task-input-time" id="task-input-time" />
+            </div>
+          </div>
+          <label class="check-row" for="imp-check-box">
+            <input type="checkbox" name="imp-check-box" id="imp-check-box" />
+            Mark as important
+          </label>
+        </div>
+        <footer class="dialog__foot">
+          <button type="button" class="btn btn--ghost" id="cancel-add-task" data-close>Cancel</button>
+          <button type="submit" class="btn btn--primary" id="add-task-btn">Add task</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <!-- Confirm -->
+    <dialog class="dialog dialog--sm" id="confirm-modal" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+      <form method="dialog" class="dialog__panel">
+        <div class="confirm">
+          <span class="confirm__icon" data-icon="trash"></span>
+          <h2 id="confirm-title">Are you sure?</h2>
+          <p id="confirm-text"></p>
+        </div>
+        <footer class="dialog__foot dialog__foot--plain">
+          <button type="submit" value="cancel" class="btn btn--ghost" id="delete-cancel">Cancel</button>
+          <button type="submit" value="ok" class="btn btn--danger" id="delete-task-btn">Delete</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <!-- Settings -->
+    <dialog class="dialog" id="setting-modal" aria-labelledby="setting-title">
+      <div class="dialog__panel">
+        <header class="dialog__head">
+          <h2 id="setting-title">Settings</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close" data-icon="close"></button>
+        </header>
+        <div class="dialog__body">
+          <section class="set-group set-group--first" aria-labelledby="set-profile">
+            <h3 id="set-profile">Profile</h3>
+            <div class="profile-edit">
+              <span class="avatar avatar--lg" data-avatar></span>
+              <div class="profile-edit__actions">
+                <button type="button" class="btn btn--soft" id="avatar-pick">Change photo</button>
+                <button type="button" class="btn btn--ghost" id="avatar-remove">Remove</button>
+                <input type="file" id="avatar-input" class="sr-only" accept="image/*" tabindex="-1" />
+              </div>
+            </div>
+            <p class="field__error" id="avatar-error" role="alert" hidden>That file couldn't be used as a photo. Try a JPG or PNG.</p>
+            <div class="field">
+              <label for="name-input">Your name</label>
+              <input class="input" type="text" id="name-input" maxlength="40" placeholder="User Name" autocomplete="name" />
+            </div>
+          </section>
+
+          <section class="set-group" aria-labelledby="set-theme">
+            <h3 id="set-theme">Appearance</h3>
+            <div class="theme-options" role="radiogroup" aria-labelledby="set-theme">
+              <label class="theme-option"><input type="radio" name="theme" value="system" /><span>System</span></label>
+              <label class="theme-option"><input type="radio" name="theme" value="light" /><span>Light</span></label>
+              <label class="theme-option"><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
+            </div>
+          </section>
+
+          <section class="set-group" aria-labelledby="set-data">
+            <h3 id="set-data">Your data</h3>
+            <p class="hint">Tasks are saved in this browser only. Export a copy if you want a backup.</p>
+            <div class="data-actions">
+              <button type="button" class="btn btn--ghost" id="export-btn">Export tasks</button>
+              <button type="button" class="btn btn--ghost" id="clear-done-btn">Clear completed</button>
+              <button type="button" class="btn btn--danger-soft" id="clear-all-btn">Delete all tasks</button>
+            </div>
+          </section>
+        </div>
+        <footer class="dialog__foot">
+          <button type="button" class="btn btn--primary" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Calendar -->
+    <dialog class="dialog dialog--sm" id="calendar-modal" aria-labelledby="cal-title">
+      <div class="dialog__panel">
+        <header class="dialog__head">
+          <h2 id="cal-title"></h2>
+          <div class="cal__nav">
+            <button type="button" class="icon-btn" id="cal-prev" aria-label="Previous month" data-icon="chevL"></button>
+            <button type="button" class="icon-btn" id="cal-next" aria-label="Next month" data-icon="chevR"></button>
+          </div>
+        </header>
+        <div class="dialog__body">
+          <div class="cal__grid" id="cal-grid"></div>
+        </div>
+        <footer class="dialog__foot">
+          <button type="button" class="btn btn--ghost" id="cal-clear">Show all dates</button>
+          <button type="button" class="btn btn--soft" id="cal-today">Today</button>
+        </footer>
+      </div>
+    </dialog>
+  </body>
+</html>
